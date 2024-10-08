@@ -12,7 +12,7 @@ import (
 
 func Test_ExecuteInvalidStatusCommand(t *testing.T) {
 	algodClient, err := algod.MakeClient(
-		"http://0.0.0.0:4001",
+		"http://255.255.255.255:4001",
 		"",
 	)
 	if err != nil {
@@ -21,7 +21,7 @@ func Test_ExecuteInvalidStatusCommand(t *testing.T) {
 
 	// Test Invalid Node
 	_, err = MakeStatusViewModel(algodClient)
-	if !strings.Contains(err.Error(), "dial tcp 0.0.0.0:4001") {
+	if !strings.Contains(err.Error(), "dial tcp 255.255.255.255:4001") {
 		t.Fatal(err)
 	}
 }
