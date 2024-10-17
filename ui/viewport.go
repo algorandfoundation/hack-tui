@@ -4,26 +4,41 @@ import (
 	"context"
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/viewport"
+	"github.com/algorandfoundation/hack-tui/ui/pages/accounts"
+	"github.com/algorandfoundation/hack-tui/ui/pages/generate"
+	"github.com/algorandfoundation/hack-tui/ui/pages/keys"
+	"github.com/algorandfoundation/hack-tui/ui/pages/transaction"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-const useHighPerformanceRenderer = false
+type ViewportPage string
+
+const (
+	AccountsPage    ViewportPage = "accounts"
+	KeysPage        ViewportPage = "keys"
+	GeneratePage    ViewportPage = "generate"
+	TransactionPage ViewportPage = "transaction"
+)
 
 type ViewportViewModel struct {
-	// Status Component
-	status StatusViewModel
-	// Protocol Component
+	PageWidth, PageHeight         int
+	TerminalWidth, TerminalHeight int
+	// Header Components
+	status   StatusViewModel
 	protocol ProtocolViewModel
-	// Application Controls
-	controls ControlViewModel
 
-	ready    bool
-	viewport viewport.Model
-	// TODO: move to custom component
-	table table.Model
+	// Pages
+	accountsPage    accounts.ViewModel
+	keysPage        keys.ViewModel
+	generatePage    generate.ViewModel
+	transactionPage transaction.ViewModel
+
+	// Viewport Statue
+	ready bool
+	//viewport              viewport.Model
+	viewportPage          ViewportPage
+	viewportStatusChannel chan ViewportPage
 }
 
 // Init is a no-op
@@ -38,124 +53,100 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds []tea.Cmd
 	)
 
-	switch msg := msg.(type) {
-	case uint64:
-		m.status.Status.LastRound = msg
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "ctrl+c":
-			return m, tea.Quit
-		case "enter":
-			if m.table.SelectedRow() != nil {
-				return m, tea.Batch(
-					tea.Printf("Let's go to %s!", m.table.SelectedRow()[1]),
-				)
-			}
-
-		}
-
-	case tea.WindowSizeMsg:
-		headerHeight := lipgloss.Height(m.headerView())
-		footerHeight := lipgloss.Height(m.controls.View())
-		verticalMarginHeight := headerHeight + footerHeight
-
-		// On first run, configure the models
-		if !m.ready {
-			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
-			m.viewport.YPosition = headerHeight
-			m.viewport.HighPerformanceRendering = useHighPerformanceRenderer
-			m.viewport.SetContent(m.table.View())
-			m.ready = true
-
-			// TODO: Better reactivity and hidden attributes
-			fillSize := max(0, (msg.Width-49)/2)
-			columns := []table.Column{
-				{Title: "Account", Width: fillSize},
-				{Title: "Status", Width: hidden(20, fillSize)},
-				{Title: "Keys", Width: 4},
-				{Title: "Expires", Width: 15},
-				{Title: "Last Used", Width: 10},
-				{Title: "Balance", Width: fillSize},
-			}
-
-			rows := []table.Row{
-				{"QNZ7GONNHTNXFW56Y24CNJQEMYKZKKI566ASNSWPD24VSGKJWHGO6QOP7U", "Active", "4", "42 days", "NA", "42,000 ALGO"},
-				{"WZ7BQUYLGP5GCWVHH6PJJCGCIHRV4K7ZDFWHED74HGLUCB3GTDVPNFRVUM", "Cooldown (31 rounds)", "1", "169 days", "NA", "13,000 ALGO"},
-			}
-
-			m.table = table.New(
-				table.WithColumns(columns),
-				table.WithRows(rows),
-				table.WithFocused(true),
-				table.WithHeight(m.viewport.Height-verticalMarginHeight),
-			)
-
-			s := table.DefaultStyles()
-			s.Header = s.Header.
-				BorderStyle(lipgloss.NormalBorder()).
-				BorderForeground(lipgloss.Color("240")).
-				BorderBottom(true).
-				Bold(false)
-			s.Selected = s.Selected.
-				Foreground(lipgloss.Color("229")).
-				Background(lipgloss.Color("57")).
-				Bold(false)
-			m.table.SetStyles(s)
-			m.viewport.YPosition = headerHeight + 1
-		} else { // Run the update cycle
-			m.table.SetWidth(msg.Width)
-			m.table.SetHeight(msg.Height - verticalMarginHeight)
-
-			fillSize := (msg.Width - 62) / 2
-			columns := []table.Column{
-				{Title: "Account", Width: fillSize},
-				{Title: "Status", Width: hidden(20, fillSize)},
-				{Title: "Keys", Width: 4},
-				{Title: "Expires", Width: 15},
-				{Title: "Last Used", Width: 10},
-				{Title: "Balance", Width: fillSize},
-			}
-			m.table.SetColumns(columns)
-
-			m.viewport.Width = msg.Width
-			m.viewport.Height = msg.Height - verticalMarginHeight
-		}
-
-		if useHighPerformanceRenderer {
-			cmds = append(cmds, viewport.Sync(m.viewport))
-		}
-	}
-
-	m.table, cmd = m.table.Update(msg)
-	cmds = append(cmds, cmd)
-	m.controls, cmd = m.controls.HandleMessage(msg)
-	cmds = append(cmds, cmd)
+	// Handle Header Updates
 	m.protocol, cmd = m.protocol.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 	m.status, cmd = m.status.HandleMessage(msg)
+	cmds = append(cmds, cmd)
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		// TODO: Disable these handlers
+		switch msg.String() {
+		case "h":
+			m.PageHeight = max(0, m.TerminalHeight-lipgloss.Height(m.headerView()))
+		case "a":
+			m.viewportPage = AccountsPage
+		case "k":
+			m.keysPage.Address = m.accountsPage.SelectedAccount()
+			m.viewportPage = KeysPage
+		case "t":
+			m.viewportPage = TransactionPage
+		//case "g":
+		//	m.viewportPage = GeneratePage
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		}
+
+	case tea.WindowSizeMsg:
+		m.TerminalWidth = msg.Width
+		m.TerminalHeight = msg.Height
+
+		m.PageWidth = msg.Width
+		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView()))
+
+		m.accountsPage.ViewHeight = m.PageHeight
+		m.accountsPage.ViewWidth = m.PageWidth
+		m.keysPage.ViewHeight = m.PageHeight
+		m.keysPage.ViewWidth = m.PageWidth
+		m.transactionPage.ViewHeight = m.PageHeight
+		m.transactionPage.ViewWidth = m.PageWidth
+	}
+	// Get Page Updates
+	switch m.viewportPage {
+	case AccountsPage:
+		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
+	case KeysPage:
+		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
+	case GeneratePage:
+		m.generatePage, cmd = m.generatePage.HandleMessage(msg)
+	case TransactionPage:
+		m.transactionPage, cmd = m.transactionPage.HandleMessage(msg)
+	}
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
 
 // View renders the viewport.Model
 func (m ViewportViewModel) View() string {
-	if !m.ready {
-		return "\n  Initializing..."
+	// Handle Page render
+	var page tea.Model
+	switch m.viewportPage {
+	case AccountsPage:
+		page = m.accountsPage
+	case GeneratePage:
+		page = m.generatePage
+	case KeysPage:
+		page = m.keysPage
+	case TransactionPage:
+		page = m.transactionPage
 	}
-	m.viewport.SetContent(m.table.View())
-	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.controls.View())
+	return fmt.Sprintf("%s\n%s", m.headerView(), page.View())
+	if m.headerView() != "" {
+		//return m.headerView()
+		return fmt.Sprintf("%s\n%s", m.headerView(), page.View())
+	}
+	return page.View()
 }
 
 // headerView generates the top elements
 func (m ViewportViewModel) headerView() string {
-	// TODO: Stack Vertically on small screens
-	render := lipgloss.JoinHorizontal(lipgloss.Center, m.status.View(), m.protocol.View())
-	return render
+	if m.TerminalHeight < 15 {
+		return ""
+	}
+
+	if m.TerminalWidth < 90 {
+		if m.protocol.View() == "" {
+			return lipgloss.JoinVertical(lipgloss.Center, m.status.View())
+		}
+		return lipgloss.JoinVertical(lipgloss.Center, m.status.View(), m.protocol.View())
+	}
+
+	return lipgloss.JoinHorizontal(lipgloss.Center, m.status.View(), m.protocol.View())
 }
 
 // MakeViewportViewModel handles the construction of the TUI viewport
 func MakeViewportViewModel(ctx context.Context, client *api.ClientWithResponses) (*ViewportViewModel, error) {
-	controls := MakeControlViewModel()
 
 	status, err := MakeStatusViewModel(ctx, client)
 	if err != nil {
@@ -163,10 +154,24 @@ func MakeViewportViewModel(ctx context.Context, client *api.ClientWithResponses)
 	}
 	protocol := MakeProtocolViewModel(status.Status)
 
+	ap, err := accounts.New(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+
+	kp, err := keys.New(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+	kp.Address = ap.SelectedAccount()
 	m := ViewportViewModel{
-		status:   status,
-		protocol: protocol,
-		controls: controls,
+		status:          status,
+		protocol:        protocol,
+		accountsPage:    ap,
+		keysPage:        kp,
+		generatePage:    generate.New(ctx, client),
+		transactionPage: transaction.New(ctx, client),
+		viewportPage:    AccountsPage,
 	}
 
 	return &m, nil

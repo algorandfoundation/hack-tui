@@ -13,10 +13,11 @@ import (
 
 // StatusViewModel is extended from the internal.StatusModel
 type StatusViewModel struct {
-	Status    *internal.StatusModel
-	Metrics   *internal.MetricsModel
-	ViewWidth int
-	IsVisible bool
+	Status     *internal.StatusModel
+	Metrics    *internal.MetricsModel
+	ViewWidth  int
+	ViewHeight int
+	IsVisible  bool
 }
 
 // Init has no I/O right now
@@ -38,6 +39,8 @@ func (m StatusViewModel) HandleMessage(msg tea.Msg) (StatusViewModel, tea.Cmd) {
 		m.Status.LastRound = msg
 	case tea.WindowSizeMsg:
 		m.ViewWidth = msg.Width
+		m.ViewHeight = msg.Height
+
 	// Is it a key press?
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -61,29 +64,38 @@ func (m StatusViewModel) View() string {
 	if m.ViewWidth <= 0 {
 		return "Loading...\n\n\n\n\n\n"
 	}
+
+	isCompact := m.ViewWidth < 90
+
+	var size int
+	if isCompact {
+		size = m.ViewWidth
+	} else {
+		size = m.ViewWidth / 2
+	}
 	beginning := blue.Render(" Latest Round: ") + strconv.Itoa(int(m.Status.LastRound))
 	end := yellow.Render(strings.ToUpper(m.Status.State)) + " "
-	middle := strings.Repeat(" ", max(0, m.ViewWidth/2-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
+	middle := strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	// Last Round
 	row1 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	beginning = blue.Render(" Round time: ") + fmt.Sprintf("%.2fs", m.Metrics.RoundTime)
 	end = fmt.Sprintf("%d KB/s ", m.Metrics.TX/1024) + green.Render("TX ")
-	middle = strings.Repeat(" ", max(0, m.ViewWidth/2-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
+	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row2 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
 	beginning = blue.Render(" TPS:") + fmt.Sprintf("%d", m.Metrics.TPS)
 	end = fmt.Sprintf("%d KB/s ", m.Metrics.RX/1024) + green.Render("RX ")
-	middle = strings.Repeat(" ", max(0, m.ViewWidth/2-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
+	middle = strings.Repeat(" ", max(0, size-(lipgloss.Width(beginning)+lipgloss.Width(end)+2)))
 
 	row3 := lipgloss.JoinHorizontal(lipgloss.Left, beginning, middle, end)
 
-	return topSections(max(0, m.ViewWidth/2)).Render(
+	return topSections(max(0, size)).Render(
 		lipgloss.JoinVertical(lipgloss.Left,
 			row1,
-			"",
+			fmt.Sprintf("%dx%d", m.ViewWidth, m.ViewHeight),
 			cyan.Render(" -- 100 round average --"),
 			row2,
 			row3,
