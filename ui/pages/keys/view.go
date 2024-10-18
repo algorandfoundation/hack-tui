@@ -1,8 +1,10 @@
 package keys
 
-import "fmt"
+import (
+	"github.com/algorandfoundation/hack-tui/ui/pages"
+	"github.com/charmbracelet/lipgloss"
+)
 
 func (m ViewModel) View() string {
-	//return m.table.View()
-	return fmt.Sprintf("%s\n%s", m.table.View(), m.controls.View())
+	return lipgloss.JoinVertical(lipgloss.Center, pages.Padding1(m.table.View()), m.controls.View())
 }

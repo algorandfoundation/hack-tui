@@ -17,3 +17,4 @@ output-options:
     - DeleteParticipationKeyByID
     - GetParticipationKeyByID
     - AppendKeys
+    - GetBlock

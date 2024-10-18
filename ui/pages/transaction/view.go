@@ -2,10 +2,10 @@ package transaction
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"strings"
 )
 
 func (m ViewModel) View() string {
-	qrCode := "TODO"
-
-	return lipgloss.JoinVertical(lipgloss.Center, qrCode, m.controls.View())
+	pad := strings.Repeat("\n", m.Height/2-1)
+	return lipgloss.JoinVertical(lipgloss.Center, pad, "TODO", pad, m.controls.View())
 }

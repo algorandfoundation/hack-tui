@@ -1,11 +1,8 @@
 package generate
 
 import (
-	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
 )
 
 func (m ViewModel) Init() tea.Cmd {
@@ -30,15 +27,15 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 					tea.Printf("Let's go to %s!", m.keyTable.SelectedRow()[1]),
 				)
 			}
-			params := api.GenerateParticipationKeysParams{
-				Dilution: nil,
-				First:    0,
-				Last:     1000,
-			}
-			_, err := internal.GenerateKeyPair(m.ctx, m.client, "WAFPLTCSVMCESEIMYPJHRADDGGKLB4LW4PFYCIU6VDCW3GLCJJS6RRWU3E", &params)
-			if err != nil {
-				log.Fatal(err)
-			}
+			//params := api.GenerateParticipationKeysParams{
+			//	Dilution: nil,
+			//	First:    0,
+			//	Last:     1000,
+			//}
+			//_, err := internal.GenerateKeyPair(m.ctx, m.client, "WAFPLTCSVMCESEIMYPJHRADDGGKLB4LW4PFYCIU6VDCW3GLCJJS6RRWU3E", &params)
+			//if err != nil {
+			//log.Fatal(err)
+			//}
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
 		}

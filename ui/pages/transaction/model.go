@@ -1,7 +1,6 @@
 package transaction
 
 import (
-	"context"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
 	"github.com/charmbracelet/lipgloss"
@@ -10,23 +9,24 @@ import (
 var green = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
 
 type ViewModel struct {
-	Width      int
-	Height     int
-	ViewHeight int
-	ViewWidth  int
+	// Width is the last known horizontal lines
+	Width int
+	// Height is the last known vertical lines
+	Height int
 
+	// Participation Key
+	Data api.ParticipationKey
+
+	// Components
 	controls controls.Model
 
 	// TODO: add URL
 	// urlTxn   string
-	ctx    context.Context
-	client *api.ClientWithResponses
 }
 
-func New(ctx context.Context, client *api.ClientWithResponses) ViewModel {
+// New creates and instance of the ViewModel with a default controls.Model
+func New() ViewModel {
 	return ViewModel{
-		ctx:      ctx,
-		client:   client,
-		controls: controls.New("(a)ccounts | (k)eys | " + green.Render("(t)xn ")),
+		controls: controls.New(" (a)ccunts | (k)eys | " + green.Render("(t)xn ")),
 	}
 }

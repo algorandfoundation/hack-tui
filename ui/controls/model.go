@@ -2,15 +2,18 @@ package controls
 
 // Model represents the data structure used for defining visibility, dimensions, and content.
 type Model struct {
+	Width     int
+	Height    int
 	IsVisible bool
-	ViewWidth int
 	Content   string
 }
 
+// New creates a instance of a Model
 func New(body string) Model {
 	return Model{
 		IsVisible: true,
-		ViewWidth: 80,
+		Width:     80,
+		Height:    24,
 		Content:   body,
 	}
 }

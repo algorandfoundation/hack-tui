@@ -1,7 +1,6 @@
 package generate
 
 import (
-	"context"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -12,11 +11,9 @@ type ViewModel struct {
 	keyTable  table.Model
 	textInput textinput.Model
 	err       error
-	ctx       context.Context
-	client    *api.ClientWithResponses
 }
 
-func New(ctx context.Context, client *api.ClientWithResponses) ViewModel {
+func New(address string, partkeys *[]api.ParticipationKey) ViewModel {
 	ti := textinput.New()
 	ti.Placeholder = "Pikachu"
 	ti.Focus()
@@ -26,7 +23,5 @@ func New(ctx context.Context, client *api.ClientWithResponses) ViewModel {
 	return ViewModel{
 		textInput: ti,
 		err:       nil,
-		ctx:       ctx,
-		client:    client,
 	}
 }

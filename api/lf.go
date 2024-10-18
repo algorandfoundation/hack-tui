@@ -19,6 +19,12 @@ const (
 	Api_keyScopes = "api_key.Scopes"
 )
 
+// Defines values for GetBlockParamsFormat.
+const (
+	Json    GetBlockParamsFormat = "json"
+	Msgpack GetBlockParamsFormat = "msgpack"
+)
+
 // AccountParticipation AccountParticipation describes the parameters used by this account in consensus protocol.
 type AccountParticipation struct {
 	// SelectionParticipationKey \[sel\] Selection public key (if any) currently registered for this round.
@@ -257,6 +263,15 @@ type Version struct {
 	Versions       []string     `json:"versions"`
 }
 
+// GetBlockParams defines parameters for GetBlock.
+type GetBlockParams struct {
+	// Format Configures whether the response object is JSON or MessagePack encoded. If not provided, defaults to JSON.
+	Format *GetBlockParamsFormat `form:"format,omitempty" json:"format,omitempty"`
+}
+
+// GetBlockParamsFormat defines parameters for GetBlock.
+type GetBlockParamsFormat string
+
 // GenerateParticipationKeysParams defines parameters for GenerateParticipationKeys.
 type GenerateParticipationKeysParams struct {
 	// Dilution Key dilution for two-level participation keys (defaults to sqrt of validity window).
@@ -345,6 +360,9 @@ type ClientInterface interface {
 	// Metrics request
 	Metrics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetBlock request
+	GetBlock(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetParticipationKeys request
 	GetParticipationKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -375,6 +393,18 @@ type ClientInterface interface {
 
 func (c *Algod) Metrics(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewMetricsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Algod) GetBlock(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBlockRequest(c.Server, round, params)
 	if err != nil {
 		return nil, err
 	}
@@ -510,6 +540,62 @@ func NewMetricsRequest(server string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetBlockRequest generates requests for GetBlock
+func NewGetBlockRequest(server string, round int, params *GetBlockParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "round", runtime.ParamLocationPath, round)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v2/blocks/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Format != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "format", runtime.ParamLocationQuery, *params.Format); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -894,6 +980,9 @@ type ClientWithResponsesInterface interface {
 	// MetricsWithResponse request
 	MetricsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MetricsResponse, error)
 
+	// GetBlockWithResponse request
+	GetBlockWithResponse(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*GetBlockResponse, error)
+
 	// GetParticipationKeysWithResponse request
 	GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParticipationKeysResponse, error)
 
@@ -937,6 +1026,38 @@ func (r MetricsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r MetricsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetBlockResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Block Block header data.
+		Block map[string]interface{} `json:"block"`
+
+		// Cert Optional certificate object. This is only included when the format is set to message pack.
+		Cert *map[string]interface{} `json:"cert,omitempty"`
+	}
+	JSON400 *ErrorResponse
+	JSON401 *ErrorResponse
+	JSON404 *ErrorResponse
+	JSON500 *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetBlockResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetBlockResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1339,6 +1460,15 @@ func (c *ClientWithResponses) MetricsWithResponse(ctx context.Context, reqEditor
 	return ParseMetricsResponse(rsp)
 }
 
+// GetBlockWithResponse request returning *GetBlockResponse
+func (c *ClientWithResponses) GetBlockWithResponse(ctx context.Context, round int, params *GetBlockParams, reqEditors ...RequestEditorFn) (*GetBlockResponse, error) {
+	rsp, err := c.GetBlock(ctx, round, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetBlockResponse(rsp)
+}
+
 // GetParticipationKeysWithResponse request returning *GetParticipationKeysResponse
 func (c *ClientWithResponses) GetParticipationKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParticipationKeysResponse, error) {
 	rsp, err := c.GetParticipationKeys(ctx, reqEditors...)
@@ -1431,6 +1561,81 @@ func ParseMetricsResponse(rsp *http.Response) (*MetricsResponse, error) {
 	response := &MetricsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseGetBlockResponse parses an HTTP response from a GetBlockWithResponse call
+func ParseGetBlockResponse(rsp *http.Response) (*GetBlockResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetBlockResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Block Block header data.
+			Block map[string]interface{} `json:"block"`
+
+			// Cert Optional certificate object. This is only included when the format is set to message pack.
+			Cert *map[string]interface{} `json:"cert,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case rsp.StatusCode == 200:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 400:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 401:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 404:
+	// Content-type (application/msgpack) unsupported
+
+	case rsp.StatusCode == 500:
+		// Content-type (application/msgpack) unsupported
+
 	}
 
 	return response, nil

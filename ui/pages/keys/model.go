@@ -1,10 +1,9 @@
 package keys
 
 import (
-	"context"
 	"github.com/algorandfoundation/hack-tui/api"
-	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
+	"github.com/algorandfoundation/hack-tui/ui/pages"
 	"github.com/algorandfoundation/hack-tui/ui/utils"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
@@ -13,50 +12,29 @@ import (
 
 var green = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
 
-type tableRows = []table.Row
-
 type ViewModel struct {
-	Address    string
-	Width      int
-	Height     int
-	ViewHeight int
-	ViewWidth  int
-	table      table.Model
-	controls   controls.Model
+	Address string
+	Data    *[]api.ParticipationKey
+	Width   int
+	Height  int
 
-	rowsChannel chan tableRows
-
-	ctx    context.Context
-	client *api.ClientWithResponses
+	table    table.Model
+	controls controls.Model
 }
 
-//func (m ViewModel) SelectedParticipationKey() api.ParticipationKey {
-//	id := m.table.SelectedRow()[0]
-//}
-
-func New(ctx context.Context, client *api.ClientWithResponses) (ViewModel, error) {
+func New(address string, keys *[]api.ParticipationKey) ViewModel {
 	m := ViewModel{
-		Address:    "WAFPLTCSVMCESEIMYPJHRADDGGKLB4LW4PFYCIU6VDCW3GLCJJS6RRWU3E",
-		Width:      80,
-		Height:     24,
-		ViewHeight: 24,
-		ViewWidth:  80,
+		Address: address,
+		Data:    keys,
+		Width:   80,
+		Height:  24,
 
-		controls: controls.New("(a)ccounts | " + green.Render("(k)eys") + " | (t)xn | (d)elete | (g)enerate "),
+		controls: controls.New(" (g)enerate | (a)ccounts | " + green.Render("(k)eys") + " | (t)xn | (d)elete "),
 
-		table:       table.New(),
-		ctx:         ctx,
-		client:      client,
-		rowsChannel: make(chan tableRows),
+		table: table.New(),
 	}
-	keys, err := internal.GetPartKeys(m.ctx, m.client)
-
-	if err != nil {
-		return m, err
-	}
-
 	m.table = table.New(
-		table.WithColumns(m.makeColumns()),
+		table.WithColumns(m.makeColumns(80)),
 		table.WithRows(m.makeRows(keys)),
 		table.WithFocused(true),
 		table.WithHeight(m.Height-lipgloss.Height(m.controls.View())-1),
@@ -75,27 +53,44 @@ func New(ctx context.Context, client *api.ClientWithResponses) (ViewModel, error
 		Bold(false)
 	m.table.SetStyles(s)
 
-	return m, nil
+	return m
 }
-func (m ViewModel) makeColumns() []table.Column {
+
+func (m ViewModel) SelectedKey() *api.ParticipationKey {
+	if m.Data == nil {
+		return nil
+	}
+	var partkey *api.ParticipationKey
+	for _, key := range *m.Data {
+		selected := m.table.SelectedRow()
+		if len(selected) > 0 && key.Id == selected[0] {
+			partkey = &key
+		}
+	}
+	return partkey
+}
+func (m ViewModel) makeColumns(width int) []table.Column {
 	// TODO: refine responsiveness
-	fillSize := max(0, (m.Width-49)/2)
+	avgWidth := (width - lipgloss.Width(pages.Padding1("")) - 14) / 10
 	return []table.Column{
-		{Title: "ID", Width: 10},
-		{Title: "Address", Width: fillSize},
-		{Title: "SelectionKey", Width: fillSize},
-		{Title: "SelectionKey", Width: fillSize},
-		{Title: "SelectionKey", Width: fillSize},
-		{Title: "EffectiveLastValid", Width: hidden(20, fillSize)},
-		{Title: "EffectiveFirstValid", Width: 15},
-		{Title: "LastVote", Width: 10},
-		{Title: "LastBlockProposal", Width: 10},
-		{Title: "LastStateProof", Width: 10},
+		{Title: "ID", Width: avgWidth},
+		{Title: "Address", Width: avgWidth},
+		{Title: "SelectionParticipationKey", Width: avgWidth},
+		{Title: "VoteParticipationKey", Width: avgWidth},
+		{Title: "StateProofKey", Width: avgWidth},
+		{Title: "EffectiveLastValid", Width: avgWidth},
+		{Title: "EffectiveFirstValid", Width: avgWidth},
+		{Title: "LastVote", Width: avgWidth},
+		{Title: "LastBlockProposal", Width: avgWidth},
+		{Title: "LastStateProof", Width: avgWidth},
 	}
 }
 
 func (m ViewModel) makeRows(keys *[]api.ParticipationKey) []table.Row {
 	rows := make([]table.Row, 0)
+	if keys == nil {
+		return rows
+	}
 	for _, key := range *keys {
 		if key.Address == m.Address {
 			rows = append(rows, table.Row{

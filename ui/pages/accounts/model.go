@@ -1,84 +1,40 @@
 package accounts
 
 import (
-	"context"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
+	"github.com/algorandfoundation/hack-tui/ui/pages"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 	"sort"
 	"strconv"
-	"time"
 )
 
 var green = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
 
 type ViewModel struct {
-	Width      int
-	Height     int
-	ViewHeight int
-	ViewWidth  int
-	table      table.Model
-	controls   controls.Model
+	Width  int
+	Height int
+	Data   map[string]internal.Account
 
-	rowsChannel chan []table.Row
-
-	ctx    context.Context
-	client *api.ClientWithResponses
+	table    table.Model
+	controls controls.Model
 }
 
-func (m ViewModel) SelectedAccount() string {
-	row := m.table.SelectedRow()
-	return row[0]
-}
-
-// TODO: remove this polling in favor of upstream purposed algod response
-func (m ViewModel) pollForKeyChanges(interval time.Duration) error {
-	// Sleep then try again
-	time.Sleep(interval)
-	// Fetch the latest keys
-	currentKeys, err := internal.GetPartKeys(m.ctx, m.client)
-	if err != nil {
-		return err
-	}
-	if len(*currentKeys) != len(m.table.Rows()) {
-		rows := *m.makeRows(currentKeys)
-		m.rowsChannel <- rows
-		m.table.SetRows(rows)
-	}
-
-	return m.pollForKeyChanges(interval)
-}
-
-func New(ctx context.Context, client *api.ClientWithResponses) (ViewModel, error) {
+func New(keys *[]api.ParticipationKey) ViewModel {
 	m := ViewModel{
-		Width:      80,
-		Height:     24,
-		ViewHeight: 24,
-		ViewWidth:  80,
-
-		controls: controls.New(green.Render(" (a)ccunts") + " | (k)eys | (t)xn "),
-
-		table:       table.New(),
-		ctx:         ctx,
-		client:      client,
-		rowsChannel: make(chan []table.Row),
-	}
-	keys, err := internal.GetPartKeys(m.ctx, m.client)
-
-	if err != nil {
-		return m, err
+		Width:    0,
+		Height:   0,
+		Data:     internal.AccountsFromParticipationKeys(keys),
+		controls: controls.New(" (g)enerate | " + green.Render("(a)ccunts") + " | (k)eys | (t)xn "),
 	}
 
 	m.table = table.New(
-		table.WithColumns(m.makeColumns()),
-		table.WithRows(*m.makeRows(keys)),
+		table.WithColumns(m.makeColumns(0)),
+		table.WithRows(*m.makeRows()),
 		table.WithFocused(true),
-		table.WithHeight(m.Height-lipgloss.Height(m.controls.View())-1),
-		table.WithWidth(m.Width),
 	)
-
 	s := table.DefaultStyles()
 	s.Header = s.Header.
 		BorderStyle(lipgloss.NormalBorder()).
@@ -90,40 +46,38 @@ func New(ctx context.Context, client *api.ClientWithResponses) (ViewModel, error
 		Background(lipgloss.Color("57")).
 		Bold(false)
 	m.table.SetStyles(s)
-
-	// Watch for Key Changes
-	//go func() {
-	//	// TODO: get algod to update the generate endpoint
-	//	err := m.pollForKeyChanges(1 * time.Second)
-	//	if err != nil {
-	//		//	panic(err)
-	//	}
-	//}()
-
-	return m, nil
+	return m
 }
-func (m ViewModel) makeColumns() []table.Column {
-	// TODO: refine responsiveness
-	fillSize := max(0, (m.Width-49)/2)
+
+func (m ViewModel) SelectedAccount() internal.Account {
+	var account internal.Account
+	var selectedRow = m.table.SelectedRow()
+	if selectedRow != nil {
+		account = m.Data[selectedRow[0]]
+	}
+	return account
+}
+func (m ViewModel) makeColumns(width int) []table.Column {
+	avgWidth := (width - lipgloss.Width(pages.Padding1("")) - 14) / 5
 	return []table.Column{
-		{Title: "ID", Width: 10},
-		{Title: "Account", Width: fillSize},
-		{Title: "Status", Width: hidden(20, fillSize)},
-		{Title: "Expires", Width: 15},
-		{Title: "Balance", Width: fillSize},
+		{Title: "Account", Width: avgWidth},
+		{Title: "Keys", Width: avgWidth},
+		{Title: "Status", Width: avgWidth},
+		{Title: "Expires", Width: avgWidth},
+		{Title: "Balance", Width: avgWidth},
 	}
 }
 
-func (m ViewModel) makeRows(keys *[]api.ParticipationKey) *[]table.Row {
+func (m ViewModel) makeRows() *[]table.Row {
 	rows := make([]table.Row, 0)
-	values := internal.AccountsFromParticipationKeys(keys)
 
-	for key := range values {
+	for key := range m.Data {
 		rows = append(rows, table.Row{
-			values[key].Address,
-			strconv.Itoa(values[key].Keys),
-			values[key].Status,
-			strconv.Itoa(values[key].Balance),
+			m.Data[key].Address,
+			strconv.Itoa(m.Data[key].Keys),
+			m.Data[key].Status,
+			m.Data[key].Expires.String(),
+			strconv.Itoa(m.Data[key].Balance),
 		})
 	}
 	sort.SliceStable(rows, func(i, j int) bool {

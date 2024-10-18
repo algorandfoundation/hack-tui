@@ -5,6 +5,13 @@ import (
 	"fmt"
 )
 
+func IntPtrToZero(num *int) int {
+	if num == nil {
+		return 0
+	}
+	return *num
+}
+
 func toPtr[T any](constVar T) *T { return &constVar }
 
 func toPtrOrNil[T comparable](comparable T) *T {
