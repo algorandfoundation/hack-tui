@@ -13,6 +13,22 @@ type StateModel struct {
 	ParticipationKeys *[]api.ParticipationKey
 }
 
+func getAverage(data []float64) float64 {
+	sum := 0.0
+	for _, element := range data {
+		sum += element
+	}
+	return sum / (float64(len(data)))
+}
+func getAverageDuration(timings []time.Duration) time.Duration {
+	sum := 0.0
+	for _, element := range timings {
+		sum += element.Seconds()
+	}
+	avg := sum / (float64(len(timings)))
+	return time.Duration(avg * float64(time.Second))
+}
+
 func (s *StateModel) Watch(cb func(model *StateModel, err error), ctx context.Context, client *api.ClientWithResponses) {
 	err := s.Status.Fetch(ctx, client)
 	if err != nil {

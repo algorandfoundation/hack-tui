@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
-	"time"
 )
 
 // StatusModel represents a status response from algod.Status
@@ -52,64 +51,4 @@ func (m *StatusModel) Fetch(ctx context.Context, client *api.ClientWithResponses
 		m.Voting = *s.JSON200.UpgradeNodeVote
 	}
 	return nil
-}
-
-func getAverage(data []float64) float64 {
-	sum := 0.0
-	for _, element := range data {
-		sum += element
-	}
-	return sum / (float64(len(data)))
-}
-func getAverageDuration(timings []time.Duration) time.Duration {
-	sum := 0.0
-	for _, element := range timings {
-		sum += element.Seconds()
-	}
-	avg := sum / (float64(len(timings)))
-	return time.Duration(avg * float64(time.Second))
-}
-
-// Watch uses WaitForBlockWithResponse to wait for changes and emits to the HeartBeat channel
-func (m *StatusModel) Watch(cb func(model *StatusModel, err error), ctx context.Context, client *api.ClientWithResponses) {
-	lastRound := m.LastRound
-	timings := make([]time.Duration, 0)
-	txns := make([]float64, 0)
-	for {
-		startTime := time.Now()
-		status, err := client.WaitForBlockWithResponse(ctx, int(lastRound))
-		endTime := time.Now()
-		if err != nil {
-			cb(nil, err)
-		}
-		var format api.GetBlockParamsFormat = "json"
-		block, err := client.GetBlockWithResponse(ctx, int(lastRound), &api.GetBlockParams{
-			Format: &format,
-		})
-		if err != nil {
-			cb(nil, err)
-		}
-		m.LastRound = uint64(status.JSON200.LastRound)
-
-		dur := endTime.Sub(startTime)
-		timings = append(timings, dur)
-		if block.JSON200.Block["txns"] != nil {
-			txns = append(txns, float64(len(block.JSON200.Block["txns"].([]any)))/getAverageDuration(timings).Seconds())
-		} else {
-			txns = append(txns, 0)
-		}
-
-		m.Metrics.RoundTime = getAverageDuration(timings)
-		m.Metrics.Window = len(timings)
-		m.Metrics.TPS = getAverage(txns)
-
-		// Trim data
-		if len(timings) >= 100 {
-			timings = timings[1:]
-			txns = txns[1:]
-		}
-
-		lastRound = m.LastRound
-		cb(m, nil)
-	}
 }
