@@ -73,24 +73,11 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.status, cmd = m.status.HandleMessage(msg)
 	cmds = append(cmds, cmd)
 
-	// Get Page Updates
-	switch m.page {
-	case AccountsPage:
-		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
-	case KeysPage:
-		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
-	case GeneratePage:
-		m.generatePage, cmd = m.generatePage.HandleMessage(msg)
-	case TransactionPage:
-		m.transactionPage, cmd = m.transactionPage.HandleMessage(msg)
-	}
-	cmds = append(cmds, cmd)
-
 	switch msg := msg.(type) {
-	// When the participation keys update
+	// When the state updates
 	case internal.StateModel:
 		m.Data = &msg
-	// Navigate to the transaction page when a partkey is selected
+		// Navigate to the transaction page when a partkey is selected
 	case *api.ParticipationKey:
 		m.page = TransactionPage
 	// Navigate to the keys page when an account is selected
@@ -144,25 +131,45 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.PageWidth = msg.Width
 		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView())-1)
 
+		// Custom size message
 		pageMsg := tea.WindowSizeMsg{
 			Height: m.PageHeight,
 			Width:  m.PageWidth,
 		}
 
 		// Handle the page resize event
+		//switch m.page {
+		//case AccountsPage:
 		m.accountsPage, cmd = m.accountsPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
+		//case KeysPage:
 		m.keysPage, cmd = m.keysPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
+		//case GeneratePage:
 		m.generatePage, cmd = m.generatePage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
+		//case TransactionPage:
 		m.transactionPage, cmd = m.transactionPage.HandleMessage(pageMsg)
 		cmds = append(cmds, cmd)
-
+		//}
+		cmds = append(cmds, cmd)
 		// Avoid triggering commands again
 		return m, tea.Batch(cmds...)
+
 	}
-	return m.handlePages(cmds, msg)
+	// Get Page Updates
+	switch m.page {
+	case AccountsPage:
+		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
+	case KeysPage:
+		m.keysPage, cmd = m.keysPage.HandleMessage(msg)
+	case GeneratePage:
+		m.generatePage, cmd = m.generatePage.HandleMessage(msg)
+	case TransactionPage:
+		m.transactionPage, cmd = m.transactionPage.HandleMessage(msg)
+	}
+	cmds = append(cmds, cmd)
+	return m, tea.Batch(cmds...)
 }
 
 // View renders the viewport.Model
