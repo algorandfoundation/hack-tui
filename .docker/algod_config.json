@@ -6,5 +6,6 @@
   "IncomingConnectionsLimit": 0,
   "Archival": true,
   "isIndexerActive": false,
-  "EnableDeveloperAPI": true
+  "EnableDeveloperAPI": true,
+  "BaseLoggerDebugLevel": 5
 }

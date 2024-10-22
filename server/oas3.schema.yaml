@@ -1,0 +1,48 @@
+openapi: 3.0.1
+info:
+  contact:
+    name: Algonode.io
+    url: https://algonode.io/contact
+  description: API endpoint for algod operations.
+  title: Algod REST API.
+  version: '3.16'
+servers:
+  - url: https://mainnet-api.algonode.cloud/
+  - url: https://testnet-api.algonode.cloud/
+  - url: https://betanet-api.algonode.cloud/
+paths:
+  /status:
+    get:
+      operationId: getStatus
+      summary: Retrieve current status
+      responses:
+        '200':
+          description: Respond with Status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+components:
+  schemas:
+    Status:
+      type: object
+      description: A status response
+      properties:
+        state:
+          type: string
+          description: The state of the node
+        version:
+          type: string
+          description: Version reported by the node
+        network:
+          type: string
+          description: Network ID
+        voting:
+          type: boolean
+          description: If the network is voting on an upgrade
+        needsUpdate:
+          type: boolean
+          description: If the node requires and update
+        lastRound:
+          type: number
+          description: Last round the status has knowledge of

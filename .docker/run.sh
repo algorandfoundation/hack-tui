@@ -175,8 +175,6 @@ function start_private_network() {
   configure_data_dir
   start_kmd &
 
-  # TODO: Is there a way to properly exec a private network?
-  goal network start -r "${ALGORAND_DATA}/.."
 
   if [ -f "/algod/funded" ]; then
     echo "Account is funded"
@@ -185,8 +183,8 @@ function start_private_network() {
     touch "/algod/funded"
   fi
 
-  # get rekd logs
-  tail -f /proc/$(cat $ALGORAND_DATA/algod.pid)/fd/1
+  # TODO: Is there a way to properly exec a private network?
+  goal network start -r "${ALGORAND_DATA}/.."
 }
 
 function start_new_private_network() {
@@ -235,17 +233,19 @@ echo "   GOSSIP_PORT:     $GOSSIP_PORT"
 echo "   ALGOD_PORT:      $ALGOD_PORT"
 
 # If data directory is initialized, start existing environment.
-if [ -f "$ALGORAND_DATA/../network.json" ]; then
-  start_private_network
-  exit 1
-elif [ -f "$ALGORAND_DATA/genesis.json" ]; then
-  start_public_network
-  exit 1
-fi
+#if [ -f "$ALGORAND_DATA/../network.json" ]; then
+  #start_private_network
+  #exit 1
+#elif [ -f "$ALGORAND_DATA/genesis.json" ]; then
+  #start_public_network
+  #exit 1
+#fi
 
 # Initialize and start network.
-if [ "$NETWORK" == "" ] && [ "$PEER_ADDRESS" == "" ]; then
-  start_new_private_network
-else
-  start_new_public_network
-fi
+#if [ "$NETWORK" == "" ] && [ "$PEER_ADDRESS" == "" ]; then
+#  start_new_private_network
+#else
+#  start_new_public_network
+#fi
+
+tail -f /dev/null

@@ -4,7 +4,8 @@ WORKDIR /app
 
 ADD . .
 
-RUN go build -o ./bin/algorun *.go
+RUN go build -o /app/bin/algorun *.go
+RUN cd server && go build -o /app/bin/fortiter *.go
 
 FROM algorand/algod:latest
 
@@ -18,3 +19,4 @@ ADD .docker/run.sh /node/run/run.sh
 RUN su && chmod +x /node/run/run.sh && su algorand
 
 COPY --from=BUILDER /app/bin/algorun /bin/algorun
+COPY --from=BUILDER /app/bin/fortiter /bin/fortiter
