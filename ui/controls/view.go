@@ -11,7 +11,7 @@ func (m Model) View() string {
 		return ""
 	}
 	render := controlStyle.Render(m.Content)
-	difference := m.Width - lipgloss.Width(render)
+	difference := m.Width - lipgloss.Width(render) - 2
 	line := strings.Repeat("─", max(0, difference/2))
 	return lipgloss.JoinHorizontal(lipgloss.Center, line, render, line)
 }

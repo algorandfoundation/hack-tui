@@ -155,7 +155,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.TerminalWidth = msg.Width
 		m.TerminalHeight = msg.Height
 		m.PageWidth = msg.Width
-		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView())-1)
+		m.PageHeight = max(0, msg.Height-lipgloss.Height(m.headerView()))
 
 		// Custom size message
 		pageMsg := tea.WindowSizeMsg{

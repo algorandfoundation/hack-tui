@@ -8,7 +8,6 @@ import (
 	"github.com/algorandfoundation/algourl/encoder"
 	"github.com/algorandfoundation/hack-tui/api"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func (m ViewModel) Init() tea.Cmd {
@@ -34,7 +33,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 	case "NotParticipating": // This status means the account can never participate in consensus
 		m.urlTxn = ""
 		m.asciiQR = ""
-		m.hint = fmt.Sprintf("%s is NotParticipating. Cannot register key.", m.Data.Address)
+		m.hint = fmt.Sprintf("%s is NotParticipating. Cannot register key.", m.FormatedAddress())
 		return nil
 	}
 
@@ -69,7 +68,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 			},
 		}
 
-		m.hint = fmt.Sprintf("Scan this QR code to take %s Online.", m.Data.Address)
+		m.hint = fmt.Sprintf("Scan this QR code to take %s Online.", m.FormatedAddress())
 
 	} else {
 
@@ -81,7 +80,7 @@ func (m *ViewModel) UpdateTxnURLAndQRCode() error {
 				Fee:    &fee,
 			}}
 
-		m.hint = fmt.Sprintf("Scan this QR code to take %s Offline.", m.Data.Address)
+		m.hint = fmt.Sprintf("Scan this QR code to take %s Offline.", m.FormatedAddress())
 	}
 
 	qrCode, err := kr.ProduceQRCode()
@@ -113,7 +112,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		if msg.Width != 0 && msg.Height != 0 {
 			m.Width = msg.Width
-			m.Height = max(0, msg.Height-lipgloss.Height(m.controls.View())-3)
+			m.Height = msg.Height
 		}
 	}
 

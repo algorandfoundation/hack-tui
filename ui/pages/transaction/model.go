@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"fmt"
 	"github.com/algorandfoundation/hack-tui/api"
 	"github.com/algorandfoundation/hack-tui/internal"
 	"github.com/algorandfoundation/hack-tui/ui/controls"
@@ -28,6 +29,10 @@ type ViewModel struct {
 	asciiQR string
 	urlTxn  string
 	hint    string
+}
+
+func (m ViewModel) FormatedAddress() string {
+	return fmt.Sprintf("%s...%s", m.Data.Address[0:4], m.Data.Address[len(m.Data.Address)-4:])
 }
 
 // New creates and instance of the ViewModel with a default controls.Model
