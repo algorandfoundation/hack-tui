@@ -6,5 +6,5 @@ import (
 )
 
 func (m ViewModel) View() string {
-	return lipgloss.JoinVertical(lipgloss.Center, pages.Padding1(m.table.View()), m.controls.View())
+	return pages.WithTitle("Keys", lipgloss.JoinVertical(lipgloss.Center, pages.PageBorder(m.Width-3).Render(m.table.View()), m.controls.View()))
 }

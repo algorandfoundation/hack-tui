@@ -2,6 +2,7 @@ package generate
 
 import (
 	"fmt"
+	"github.com/algorandfoundation/hack-tui/ui/pages"
 	"strings"
 )
 
@@ -21,9 +22,5 @@ func (m ViewModel) View() string {
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
 
-	b.WriteString(helpStyle.Render("cursor mode is "))
-	b.WriteString(cursorModeHelpStyle.Render(m.cursorMode.String()))
-	b.WriteString(helpStyle.Render(" (ctrl+r to change style)"))
-
-	return b.String()
+	return pages.WithTitle("Generate", pages.PageBorder(m.Width-3).Render(b.String()))
 }

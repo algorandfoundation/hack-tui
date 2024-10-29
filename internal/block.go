@@ -56,9 +56,16 @@ func GetBlockMetrics(ctx context.Context, client *api.ClientWithResponses, round
 	if err != nil {
 		return nil, err
 	}
+
 	// Push to the transactions count list
-	aTimestamp := time.Duration(a.JSON200.Block["ts"].(float64)) * time.Second
-	bTimestamp := time.Duration(b.JSON200.Block["ts"].(float64)) * time.Second
+	aTimestampRes := a.JSON200.Block["ts"]
+	bTimestampRes := b.JSON200.Block["ts"]
+	if aTimestampRes == nil || bTimestampRes == nil {
+		return &avgs, nil
+	}
+	aTimestamp := time.Duration(aTimestampRes.(float64)) * time.Second
+	bTimestamp := time.Duration(bTimestampRes.(float64)) * time.Second
+
 	// Transaction Counter
 	aTransactions := a.JSON200.Block["tc"]
 	bTransactions := b.JSON200.Block["tc"]

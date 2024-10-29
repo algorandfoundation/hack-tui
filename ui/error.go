@@ -36,13 +36,17 @@ func (m ErrorViewModel) HandleMessage(msg tea.Msg) (ErrorViewModel, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
-		m.Height = msg.Height - 2
+		m.Height = msg.Height
 	}
 	m.controls, cmd = m.controls.HandleMessage(msg)
 	return m, cmd
 }
 
 func (m ErrorViewModel) View() string {
-	pad := strings.Repeat("\n", max(0, m.Height/2-1))
-	return lipgloss.JoinVertical(lipgloss.Center, pad, red.Render(m.Message), pad, m.controls.View())
+	ctls := m.controls.View()
+	controlHeight := lipgloss.Height(ctls)
+	msg := red.Render(m.Message)
+	msgHeight := lipgloss.Height(msg)
+	pad := strings.Repeat("\n", max(0, (m.Height/2)-controlHeight-msgHeight))
+	return lipgloss.JoinVertical(lipgloss.Center, pad, msg, pad, ctls)
 }

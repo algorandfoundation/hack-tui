@@ -10,23 +10,22 @@ var (
 		return lipgloss.NewStyle().
 			BorderStyle(lipgloss.RoundedBorder())
 	}()
-	topSections = func(width int) lipgloss.Style {
+	TopSections = func(width int) lipgloss.Style {
 		return rounderBorder.
-			Width(width - 2).
+			Width(width).
 			Padding(0).
 			Margin(0).
 			Height(5).
-			//BorderBackground(lipgloss.Color("4")).
 			BorderForeground(lipgloss.Color("5"))
 	}
 
-	blue = func() lipgloss.Style {
+	Blue = func() lipgloss.Style {
 		return lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
 	}()
-	cyan    = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
-	yellow  = lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
-	green   = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-	red     = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
+	Cyan    = lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
+	Yellow  = lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
+	Green   = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
+	Red     = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
 	Magenta = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("5")).
 		Render
@@ -47,8 +46,4 @@ func WithTitle(title string, view string) string {
 		return start + title + string(r[len(title)+id:])
 	}
 	return view
-}
-
-func WithConfirmation(modal string, view string, cb func(t string)) string {
-	return ""
 }

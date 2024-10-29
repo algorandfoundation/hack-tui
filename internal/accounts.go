@@ -27,8 +27,8 @@ type Account struct {
 	LastModified int
 }
 
-// Get Online Status of Account
-func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (string, error) {
+// GetAccount get online status of Account
+func GetAccount(client *api.ClientWithResponses, address string) (api.Account, error) {
 	var format api.AccountInformationParamsFormat = "json"
 	r, err := client.AccountInformationWithResponse(
 		context.Background(),
@@ -37,15 +37,16 @@ func getAccountOnlineStatus(client *api.ClientWithResponses, address string) (st
 			Format: &format,
 		})
 
+	var accountInfo api.Account
 	if err != nil {
-		return "N/A", err
+		return accountInfo, err
 	}
 
 	if r.StatusCode() != 200 {
-		return "N/A", errors.New(fmt.Sprintf("Failed to get account information. Received error code: %d", r.StatusCode()))
+		return accountInfo, errors.New(fmt.Sprintf("Failed to get account information. Received error code: %d", r.StatusCode()))
 	}
 
-	return r.JSON200.Status, nil
+	return *r.JSON200, nil
 }
 
 // AccountsFromParticipationKeys maps an array of api.ParticipationKey to a keyed map of Account
@@ -58,18 +59,27 @@ func AccountsFromState(state *StateModel, client *api.ClientWithResponses) map[s
 		val, ok := values[key.Address]
 		if !ok {
 
-			statusOnline, err := getAccountOnlineStatus(client, key.Address)
+			account, err := GetAccount(client, key.Address)
 
+			// TODO: handle error
 			if err != nil {
 				// TODO: Logging
 				panic(err)
 			}
 
+			var expires = time.Now()
+			if key.EffectiveLastValid != nil {
+				now := time.Now()
+				roundDiff := max(0, *key.EffectiveLastValid-int(state.Status.LastRound))
+				distance := int(state.Metrics.RoundTime) * roundDiff
+				expires = now.Add(time.Duration(distance))
+			}
+
 			values[key.Address] = Account{
 				Address: key.Address,
-				Status:  statusOnline,
-				Balance: 0,
-				Expires: time.Unix(0, 0),
+				Status:  account.Status,
+				Balance: account.Amount / 1000000,
+				Expires: expires,
 				Keys:    1,
 			}
 		} else {

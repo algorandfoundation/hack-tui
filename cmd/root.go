@@ -73,6 +73,7 @@ var (
 			p := tea.NewProgram(
 				m,
 				tea.WithAltScreen(),
+				tea.WithFPS(120),
 			)
 			go func() {
 				state.Watch(func(status *internal.StateModel, err error) {

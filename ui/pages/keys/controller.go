@@ -37,9 +37,14 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		m.table.SetWidth(msg.Width - lipgloss.Width(pages.Padding1("")) - 4)
-		m.table.SetHeight(msg.Height - lipgloss.Height(pages.Padding1("")) - lipgloss.Height(m.controls.View()))
-		m.table.SetColumns(m.makeColumns(msg.Width - lipgloss.Width(pages.Padding1("")) - 14))
+		m.Width = msg.Width
+		m.Height = msg.Height + 1
+
+		borderRender := pages.Border.Render("")
+		tableWidth := max(0, msg.Width-lipgloss.Width(borderRender)-20)
+		m.table.SetWidth(tableWidth)
+		m.table.SetHeight(m.Height - lipgloss.Height(borderRender) - lipgloss.Height(m.controls.View()))
+		m.table.SetColumns(m.makeColumns(tableWidth))
 	}
 
 	var cmds []tea.Cmd
