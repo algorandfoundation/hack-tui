@@ -10,6 +10,7 @@ import (
 	"github.com/algorandfoundation/hack-tui/ui/style"
 	"github.com/charmbracelet/log"
 	"github.com/jmoiron/sqlx"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/mattn/go-sqlite3"
@@ -40,8 +41,11 @@ var (
 
 			e := echo.New()
 			e.HideBanner = true
+
+			// TODO: handle user interaction
 			e.Use(middleware.Logger())
 			e.Use(middleware.Recover())
+			e.Use(echoprometheus.NewMiddleware("fortiter"))
 			e.Static("/", "public")
 
 			fmt.Println(style.Magenta(BANNER))
@@ -55,7 +59,7 @@ var (
 			if logFile != "" {
 				fmt.Println(style.LightBlue("Log: ") + logFile)
 			}
-			var si = fortiter.Handlers{}
+			var si = fortiter.Handlers{PrometheusHandler: echoprometheus.NewHandler()}
 			rpc.RegisterHandlers(e, si)
 
 			db, err := sqlx.Connect("sqlite3", viper.GetString("database"))
@@ -65,6 +69,7 @@ var (
 			// database drivers;  pq will exec them all, sqlite3 won't, ymmv
 			db.MustExec(fortiter.Schema)
 			db.MustExec(fortiter.StatsSchema)
+
 			err = fortiter.Sync(context.Background(), logFile, db)
 			cobra.CheckErr(err)
 

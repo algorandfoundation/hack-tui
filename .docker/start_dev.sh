@@ -20,7 +20,10 @@ if [ -d "$ALGORAND_DATA" ]; then
         if [ "$ADMIN_TOKEN" != "" ]; then
             echo "$ADMIN_TOKEN" >"$EMPTY_DATA/algod.admin.token"
         fi
-        algod -d "$ALGORAND_DATA" -l "0.0.0.0:8080"
+        algod -d "$ALGORAND_DATA" -l "0.0.0.0:8080" &
+        while ! timeout 1 bash -c "echo > /dev/tcp/localhost/8080"; do sleep 10; done
+        fortiter
+        
     else
         sed -i "s/NUM_ROUNDS/${NUM_ROUNDS:-30000}/" "/node/run/template.json"
         sed -i "s/\"NetworkName\": \"\"/\"NetworkName\": \"hack-tui\"/" "/node/run/template.json"
@@ -40,7 +43,9 @@ if [ -d "$ALGORAND_DATA" ]; then
         # Import wallet
         goal account import -m "artefact exist coil life turtle edge edge inside punch glance recycle teach melody diet method pause slam dumb race interest amused side learn able heavy"
 
-        algod -d "$ALGORAND_DATA" -l "0.0.0.0:8080"
+        algod -d "$ALGORAND_DATA" -l "0.0.0.0:8080" &
+        while ! timeout 1 bash -c "echo > /dev/tcp/localhost/8080"; do sleep 10; done
+        fortiter
     fi
 
 else

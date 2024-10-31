@@ -12,6 +12,16 @@ servers:
   - url: https://testnet-api.algonode.cloud/
   - url: https://betanet-api.algonode.cloud/
 paths:
+  /metrics:
+    get:
+      operationId: getMetrics
+      responses:
+        '200':
+          content:
+            application/text:
+              schema:
+                type: string
+          description: Prometheus Exposition Endpoint
   /agreement/{hash}:
     get:
       operationId: getAgreementEvents

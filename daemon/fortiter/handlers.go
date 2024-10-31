@@ -10,8 +10,9 @@ import (
 )
 
 type Handlers struct {
-	client api.ClientWithResponses
-	db     *sqlx.DB
+	PrometheusHandler echo.HandlerFunc
+	client            api.ClientWithResponses
+	db                *sqlx.DB
 }
 
 var (
@@ -57,4 +58,8 @@ func (h Handlers) GetWs(c echo.Context) error {
 		fmt.Printf("{ \"message\": \"%s\" }\n", msg)
 	}
 	return nil
+}
+
+func (h Handlers) GetMetrics(c echo.Context) error {
+	return h.PrometheusHandler(c)
 }

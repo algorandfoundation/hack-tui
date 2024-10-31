@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 1s
+scrape_configs:
+  - job_name: 'tui-metrics'
+    scrape_interval: 1s
+    static_configs:
+      - targets: ['dev:1337']
+  - job_name: 'algod-metrics'
+    scrape_interval: 1s
+    static_configs:
+      - targets: [ 'dev:8080' ]
