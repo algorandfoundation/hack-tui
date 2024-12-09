@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
+	"github.com/algorandfoundation/algorun-tui/cmd/node"
 	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/ui"
 	"github.com/algorandfoundation/algorun-tui/ui/explanations"
@@ -20,15 +21,6 @@ import (
 	"strings"
 )
 
-const BANNER = `
-   _____  .__                __________              
-  /  _  \ |  |    ____   ____\______   \__ __  ____  
- /  /_\  \|  |   / ___\ /  _ \|       _/  |  \/    \ 
-/    |    \  |__/ /_/  >  <_> )    |   \  |  /   |  \
-\____|__  /____/\___  / \____/|____|_  /____/|___|  /
-        \/     /_____/               \/           \/ 
-`
-
 var (
 	algod   string
 	token   = strings.Repeat("a", 64)
@@ -36,7 +28,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "algorun",
 		Short: "Manage Algorand nodes",
-		Long:  style.Purple(BANNER) + "\n",
+		Long:  style.Purple(style.BANNER) + "\n",
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
@@ -167,6 +159,7 @@ func init() {
 
 	// Add Commands
 	rootCmd.AddCommand(statusCmd)
+	rootCmd.AddCommand(node.NodeCmd)
 }
 
 // Execute executes the root command.
