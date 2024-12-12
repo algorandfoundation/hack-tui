@@ -1,7 +1,7 @@
 package modal
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/modals/generate"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
@@ -28,7 +28,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 		m.Open = true
 		m.exceptionModal.Message = msg.Error()
 		m.SetType(app.ExceptionModal)
-	case internal.StateModel:
+	case nodekit.StateModel:
 		m.State = &msg
 		m.transactionModal.State = &msg
 		m.infoModal.State = &msg

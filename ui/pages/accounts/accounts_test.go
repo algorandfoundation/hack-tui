@@ -2,7 +2,7 @@ package accounts
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui/internal/test"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
@@ -13,7 +13,7 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	m := New(&internal.StateModel{})
+	m := New(&nodekit.StateModel{})
 	acc := m.SelectedAccount()
 
 	if acc != nil {
@@ -42,9 +42,9 @@ func Test_New(t *testing.T) {
 	}
 
 	// Update syncing state
-	m.Data.Status.State = internal.SyncingState
+	m.Data.Status.State = nodekit.SyncingState
 	m.makeRows()
-	if m.Data.Status.State != internal.SyncingState {
+	if m.Data.Status.State != nodekit.SyncingState {
 
 	}
 }

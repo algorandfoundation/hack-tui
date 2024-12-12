@@ -3,7 +3,7 @@ package transaction
 import (
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/algorandfoundation/algourl/encoder"
 )
@@ -21,7 +21,7 @@ type ViewModel struct {
 	Active        bool
 
 	// Pointer to the State
-	State    *internal.StateModel
+	State    *nodekit.StateModel
 	IsOnline bool
 
 	// Components
@@ -38,7 +38,7 @@ func (m ViewModel) FormatedAddress() string {
 }
 
 // New creates and instance of the ViewModel with a default controls.Model
-func New(state *internal.StateModel) *ViewModel {
+func New(state *nodekit.StateModel) *ViewModel {
 	return &ViewModel{
 		State:       state,
 		Title:       "Offline Transaction",

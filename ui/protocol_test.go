@@ -2,7 +2,7 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/golden"
@@ -13,7 +13,7 @@ import (
 
 var protocolViewSnapshots = map[string]ProtocolViewModel{
 	"Hidden": {
-		Data: internal.StatusModel{
+		Data: nodekit.StatusModel{
 			State:       "SYNCING",
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
@@ -26,7 +26,7 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      false,
 	},
 	"HiddenHeight": {
-		Data: internal.StatusModel{
+		Data: nodekit.StatusModel{
 			State:       "SYNCING",
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
@@ -39,7 +39,7 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      true,
 	},
 	"Visible": {
-		Data: internal.StatusModel{
+		Data: nodekit.StatusModel{
 			State:       "SYNCING",
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
@@ -52,7 +52,7 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      true,
 	},
 	"VisibleSmall": {
-		Data: internal.StatusModel{
+		Data: nodekit.StatusModel{
 			State:       "SYNCING",
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
@@ -65,7 +65,7 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      true,
 	},
 	"NoVoteOrUpgrade": {
-		Data: internal.StatusModel{
+		Data: nodekit.StatusModel{
 			State:       "SYNCING",
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
@@ -78,7 +78,7 @@ var protocolViewSnapshots = map[string]ProtocolViewModel{
 		IsVisible:      true,
 	},
 	"NoVoteOrUpgradeSmall": {
-		Data: internal.StatusModel{
+		Data: nodekit.StatusModel{
 			State:       "SYNCING",
 			Version:     "v0.0.0-test",
 			Network:     "test-v1",
@@ -103,13 +103,13 @@ func Test_ProtocolSnapshot(t *testing.T) {
 
 // Test_ProtocolMessages handles any additional tests like sending messages
 func Test_ProtocolMessages(t *testing.T) {
-	state := internal.StateModel{
-		Status: internal.StatusModel{
+	state := nodekit.StateModel{
+		Status: nodekit.StatusModel{
 			LastRound:   1337,
 			NeedsUpdate: true,
-			State:       internal.SyncingState,
+			State:       nodekit.SyncingState,
 		},
-		Metrics: internal.MetricsModel{
+		Metrics: nodekit.MetricsModel{
 			RoundTime: 0,
 			TX:        0,
 			RX:        0,
@@ -134,7 +134,7 @@ func Test_ProtocolMessages(t *testing.T) {
 		teatest.WithCheckInterval(time.Millisecond*100),
 		teatest.WithDuration(time.Second*3),
 	)
-	tm.Send(internal.StatusModel{
+	tm.Send(nodekit.StatusModel{
 		State:       "",
 		Version:     "",
 		Network:     "",

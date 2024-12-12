@@ -2,7 +2,7 @@ package confirm
 
 import (
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,10 +16,10 @@ type ViewModel struct {
 	Controls    string
 	BorderColor string
 	ActiveKey   *api.ParticipationKey
-	Data        *internal.StateModel
+	Data        *nodekit.StateModel
 }
 
-func New(state *internal.StateModel) *ViewModel {
+func New(state *nodekit.StateModel) *ViewModel {
 	return &ViewModel{
 		Width:       0,
 		Height:      0,

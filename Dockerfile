@@ -4,7 +4,7 @@ WORKDIR /app
 
 ADD . .
 
-RUN CGO_ENABLED=0 go build -o ./bin/algorun *.go
+RUN CGO_ENABLED=0 go build -o ./bin/algorun main.go && CGO_ENABLED=0 go build -o ./bin/fortiter daemon/main.go
 
 FROM algorand/algod:latest
 
@@ -20,6 +20,7 @@ ADD .docker/start_empty.sh /node/run/start_empty.sh
 ADD .docker/start_fast_catchup.sh /node/run/start_fast_catchup.sh
 
 COPY --from=builder /app/bin/algorun /bin/algorun
+COPY --from=BUILDER /app/bin/fortiter /bin/fortiter
 
 RUN apt-get update && apt-get install jq -y
 

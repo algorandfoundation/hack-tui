@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/modal"
 	"github.com/algorandfoundation/algorun-tui/ui/pages/accounts"
@@ -18,7 +18,7 @@ type ViewportViewModel struct {
 	PageWidth, PageHeight         int
 	TerminalWidth, TerminalHeight int
 
-	Data *internal.StateModel
+	Data *nodekit.StateModel
 
 	// Header Components
 	status   StatusViewModel
@@ -57,7 +57,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.page = msg
 	// When the state updates
-	case internal.StateModel:
+	case nodekit.StateModel:
 		m.Data = &msg
 		m.accountsPage, cmd = m.accountsPage.HandleMessage(msg)
 		cmds = append(cmds, cmd)
@@ -75,7 +75,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "g":
 			// Only open modal when it is closed and not syncing
-			if !m.modal.Open && m.Data.Status.State == internal.StableState && m.Data.Metrics.RoundTime > 0 {
+			if !m.modal.Open && m.Data.Status.State == nodekit.StableState && m.Data.Metrics.RoundTime > 0 {
 				address := ""
 				selected := m.accountsPage.SelectedAccount()
 				if selected != nil {
@@ -86,7 +86,7 @@ func (m ViewportViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					Address: address,
 					Type:    app.GenerateModal,
 				})
-			} else if m.Data.Status.State != internal.StableState || m.Data.Metrics.RoundTime == 0 {
+			} else if m.Data.Status.State != nodekit.StableState || m.Data.Metrics.RoundTime == 0 {
 				genErr := errors.New("Please wait for more data to sync before generating a key")
 				m.modal, cmd = m.modal.HandleMessage(genErr)
 				cmds = append(cmds, cmd)
@@ -211,7 +211,7 @@ func (m ViewportViewModel) headerView() string {
 }
 
 // NewViewportViewModel handles the construction of the TUI viewport
-func NewViewportViewModel(state *internal.StateModel, client api.ClientWithResponsesInterface) (*ViewportViewModel, error) {
+func NewViewportViewModel(state *nodekit.StateModel, client api.ClientWithResponsesInterface) (*ViewportViewModel, error) {
 	m := ViewportViewModel{
 		Data: state,
 

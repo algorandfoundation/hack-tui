@@ -2,7 +2,7 @@ package ui
 
 import (
 	"bytes"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"testing"
 	"time"
 
@@ -14,13 +14,13 @@ import (
 
 var statusViewSnapshots = map[string]StatusViewModel{
 	"Syncing": {
-		Data: &internal.StateModel{
-			Status: internal.StatusModel{
+		Data: &nodekit.StateModel{
+			Status: nodekit.StatusModel{
 				LastRound:   1337,
 				NeedsUpdate: true,
 				State:       "SYNCING",
 			},
-			Metrics: internal.MetricsModel{
+			Metrics: nodekit.MetricsModel{
 				RoundTime: 0,
 				TX:        0,
 			},
@@ -30,13 +30,13 @@ var statusViewSnapshots = map[string]StatusViewModel{
 		IsVisible:      true,
 	},
 	"Hidden": {
-		Data: &internal.StateModel{
-			Status: internal.StatusModel{
+		Data: &nodekit.StateModel{
+			Status: nodekit.StatusModel{
 				LastRound:   1337,
 				NeedsUpdate: true,
 				State:       "SYNCING",
 			},
-			Metrics: internal.MetricsModel{
+			Metrics: nodekit.MetricsModel{
 				RoundTime: 0,
 				TX:        0,
 			},
@@ -46,13 +46,13 @@ var statusViewSnapshots = map[string]StatusViewModel{
 		IsVisible:      false,
 	},
 	"Loading": {
-		Data: &internal.StateModel{
-			Status: internal.StatusModel{
+		Data: &nodekit.StateModel{
+			Status: nodekit.StatusModel{
 				LastRound:   1337,
 				NeedsUpdate: true,
 				State:       "SYNCING",
 			},
-			Metrics: internal.MetricsModel{
+			Metrics: nodekit.MetricsModel{
 				RoundTime: 0,
 				TX:        0,
 			},
@@ -73,13 +73,13 @@ func Test_StatusSnapshot(t *testing.T) {
 }
 
 func Test_StatusMessages(t *testing.T) {
-	state := internal.StateModel{
-		Status: internal.StatusModel{
+	state := nodekit.StateModel{
+		Status: nodekit.StatusModel{
 			LastRound:   1337,
 			NeedsUpdate: true,
-			State:       internal.SyncingState,
+			State:       nodekit.SyncingState,
 		},
-		Metrics: internal.MetricsModel{
+		Metrics: nodekit.MetricsModel{
 			RoundTime: 0,
 			TX:        0,
 			RX:        0,

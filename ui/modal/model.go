@@ -2,7 +2,7 @@ package modal
 
 import (
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/modals/confirm"
 	"github.com/algorandfoundation/algorun-tui/ui/modals/exception"
@@ -22,7 +22,7 @@ type ViewModel struct {
 	Height int
 
 	// State for Context/Client
-	State *internal.StateModel
+	State *nodekit.StateModel
 	// Address defines the string format address of the entity
 	Address string
 
@@ -82,7 +82,7 @@ func (m *ViewModel) SetType(modal app.ModalType) {
 	}
 }
 
-func New(parent string, open bool, state *internal.StateModel) *ViewModel {
+func New(parent string, open bool, state *nodekit.StateModel) *ViewModel {
 	return &ViewModel{
 		Parent: parent,
 		Open:   open,

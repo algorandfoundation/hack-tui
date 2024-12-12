@@ -3,22 +3,22 @@ package test
 import (
 	"context"
 	"github.com/algorandfoundation/algorun-tui/api"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	mock2 "github.com/algorandfoundation/algorun-tui/internal/test/mock"
 	"time"
 )
 
-func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
-	sm := &internal.StateModel{
-		Status: internal.StatusModel{
-			State:       internal.StableState,
+func GetState(client api.ClientWithResponsesInterface) *nodekit.StateModel {
+	sm := &nodekit.StateModel{
+		Status: nodekit.StatusModel{
+			State:       nodekit.StableState,
 			Version:     "v-test",
 			Network:     "v-test-network",
 			Voting:      false,
 			NeedsUpdate: false,
 			LastRound:   0,
 		},
-		Metrics: internal.MetricsModel{
+		Metrics: nodekit.MetricsModel{
 			Enabled:   true,
 			Window:    100,
 			RoundTime: time.Second * 2,
@@ -36,11 +36,11 @@ func GetState(client api.ClientWithResponsesInterface) *internal.StateModel {
 		Client:            client,
 		Context:           context.Background(),
 	}
-	values := make(map[string]internal.Account)
+	values := make(map[string]nodekit.Account)
 	for _, key := range *sm.ParticipationKeys {
 		val, ok := values[key.Address]
 		if !ok {
-			values[key.Address] = internal.Account{
+			values[key.Address] = nodekit.Account{
 				Address:           key.Address,
 				Status:            "Offline",
 				Balance:           0,

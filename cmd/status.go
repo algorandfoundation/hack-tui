@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
@@ -27,8 +27,8 @@ var statusCmd = &cobra.Command{
 		// Get Algod from configuration
 		client, err := getClient()
 		cobra.CheckErr(err)
-		state := internal.StateModel{
-			Status: internal.StatusModel{
+		state := nodekit.StateModel{
+			Status: nodekit.StatusModel{
 				State:       "SYNCING",
 				Version:     "N/A",
 				Network:     "N/A",
@@ -36,7 +36,7 @@ var statusCmd = &cobra.Command{
 				NeedsUpdate: true,
 				LastRound:   0,
 			},
-			Metrics: internal.MetricsModel{
+			Metrics: nodekit.MetricsModel{
 				RoundTime: 0,
 				TPS:       0,
 				RX:        0,
@@ -44,14 +44,14 @@ var statusCmd = &cobra.Command{
 			},
 			ParticipationKeys: nil,
 		}
-		err = state.Status.Fetch(context.Background(), client, new(internal.HttpPkg))
+		err = state.Status.Fetch(context.Background(), client, new(nodekit.HttpPkg))
 		cobra.CheckErr(err)
 		// Create the TUI
 		view := ui.MakeStatusViewModel(&state)
 
 		p := tea.NewProgram(view, tea.WithAltScreen())
 		go func() {
-			state.Watch(func(status *internal.StateModel, err error) {
+			state.Watch(func(status *nodekit.StateModel, err error) {
 				cobra.CheckErr(err)
 				p.Send(state)
 			}, context.Background(), client)

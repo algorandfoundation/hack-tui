@@ -1,4 +1,4 @@
-package internal
+package nodekit
 
 import "net/http"
 

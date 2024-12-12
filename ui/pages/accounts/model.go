@@ -1,18 +1,18 @@
 package accounts
 
 import (
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"sort"
 	"strconv"
 	"time"
 
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type ViewModel struct {
-	Data *internal.StateModel
+	Data *nodekit.StateModel
 
 	Title       string
 	Navigation  string
@@ -24,7 +24,7 @@ type ViewModel struct {
 	table table.Model
 }
 
-func New(state *internal.StateModel) ViewModel {
+func New(state *nodekit.StateModel) ViewModel {
 	m := ViewModel{
 		Title:       "Accounts",
 		Width:       0,
@@ -54,8 +54,8 @@ func New(state *internal.StateModel) ViewModel {
 	return m
 }
 
-func (m ViewModel) SelectedAccount() *internal.Account {
-	var account *internal.Account
+func (m ViewModel) SelectedAccount() *nodekit.Account {
+	var account *nodekit.Account
 	var selectedRow = m.table.SelectedRow()
 	if selectedRow != nil {
 		selectedAccount := m.Data.Accounts[selectedRow[0]]
@@ -95,7 +95,7 @@ func (m ViewModel) makeRows() *[]table.Row {
 		}
 
 		// Override the state while syncing
-		if m.Data.Status.State != internal.StableState {
+		if m.Data.Status.State != nodekit.StableState {
 			expires = "SYNCING"
 		}
 

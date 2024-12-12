@@ -1,5 +1,7 @@
 build:
-	CGO_ENABLED=0 go build -o bin/algorun *.go
+	CGO_ENABLED=0 go build -o bin/algorun main.go
+build-daemon:
+	CGO_ENABLED=0 go build -o bin/fortiter -ldflags "-X cmd.version=testing" daemon/main.go 
 test:
 	go test -coverpkg=./... -covermode=atomic ./...
 generate:
