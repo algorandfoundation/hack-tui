@@ -1,10 +1,10 @@
 package generate
 
 import (
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"strconv"
 	"time"
 
-	"github.com/algorandfoundation/algorun-tui/internal"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -76,7 +76,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 			switch m.Step {
 			case AddressStep:
 				addr := m.Input.Value()
-				if !internal.ValidateAddress(addr) {
+				if !nodekit.ValidateAddress(addr) {
 					m.InputError = "Error: invalid address"
 					return &m, nil
 				}
@@ -91,18 +91,18 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (*ViewModel, tea.Cmd) {
 				}
 				m.InputTwoError = ""
 				m.SetStep(WaitingStep)
-				var rangeType internal.RangeType
+				var rangeType nodekit.RangeType
 				var dur int
 				switch m.Range {
 				case Day:
 					dur = int(time.Hour*24) * val
-					rangeType = internal.TimeRange
+					rangeType = nodekit.TimeRange
 				case Month:
 					dur = int(time.Hour*24*30) * val
-					rangeType = internal.TimeRange
+					rangeType = nodekit.TimeRange
 				case Round:
 					dur = val
-					rangeType = internal.RoundRange
+					rangeType = nodekit.RoundRange
 				}
 				return &m, tea.Sequence(app.EmitShowModal(app.GenerateModal), app.GenerateCmd(m.Input.Value(), rangeType, dur, m.State))
 

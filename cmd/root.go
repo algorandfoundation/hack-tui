@@ -7,7 +7,7 @@ import (
 	"github.com/algorandfoundation/algorun-tui/api"
 	"github.com/algorandfoundation/algorun-tui/cmd/configure"
 	"github.com/algorandfoundation/algorun-tui/cmd/node"
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui"
 	"github.com/algorandfoundation/algorun-tui/ui/explanations"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
@@ -64,15 +64,15 @@ var (
 					v.StatusCode())
 			}
 
-			partkeys, err := internal.GetPartKeys(ctx, client)
+			partkeys, err := nodekit.GetPartKeys(ctx, client)
 			if err != nil {
 				return fmt.Errorf(
 					style.Red.Render("failed to get participation keys: %s")+
 						explanations.TokenNotAdmin,
 					err)
 			}
-			state := internal.StateModel{
-				Status: internal.StatusModel{
+			state := nodekit.StateModel{
+				Status: nodekit.StatusModel{
 					State:       "INITIALIZING",
 					Version:     "N/A",
 					Network:     "N/A",
@@ -80,7 +80,7 @@ var (
 					NeedsUpdate: true,
 					LastRound:   0,
 				},
-				Metrics: internal.MetricsModel{
+				Metrics: nodekit.MetricsModel{
 					RoundTime: 0,
 					TPS:       0,
 					RX:        0,
@@ -91,10 +91,10 @@ var (
 				Client:  client,
 				Context: ctx,
 			}
-			state.Accounts, err = internal.AccountsFromState(&state, new(internal.Clock), client)
+			state.Accounts, err = nodekit.AccountsFromState(&state, new(nodekit.Clock), client)
 			cobra.CheckErr(err)
 			// Fetch current state
-			err = state.Status.Fetch(ctx, client, new(internal.HttpPkg))
+			err = state.Status.Fetch(ctx, client, new(nodekit.HttpPkg))
 			cobra.CheckErr(err)
 
 			m, err := ui.NewViewportViewModel(&state, client)
@@ -106,7 +106,7 @@ var (
 				tea.WithFPS(120),
 			)
 			go func() {
-				state.Watch(func(status *internal.StateModel, err error) {
+				state.Watch(func(status *nodekit.StateModel, err error) {
 					if err == nil {
 						p.Send(state)
 					}

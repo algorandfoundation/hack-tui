@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/algorandfoundation/algorun-tui/internal"
+	"github.com/algorandfoundation/algorun-tui/internal/nodekit"
 	"github.com/algorandfoundation/algorun-tui/ui/app"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,7 +19,7 @@ func (m ViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	// When the State changes
-	case internal.StateModel:
+	case nodekit.StateModel:
 		m.Data = msg.ParticipationKeys
 		m.table.SetRows(*m.makeRows(m.Data))
 		m.Participation = msg.Accounts[m.Address].Participation
@@ -30,7 +30,7 @@ func (m ViewModel) HandleMessage(msg tea.Msg) (ViewModel, tea.Cmd) {
 		m.table.SetRows(*m.makeRows(m.Data))
 	// When a confirmation Modal is finished deleting
 	case app.DeleteFinished:
-		internal.RemovePartKeyByID(m.Data, msg.Id)
+		nodekit.RemovePartKeyByID(m.Data, msg.Id)
 		m.table.SetRows(*m.makeRows(m.Data))
 	// When the user interacts with the render
 	case tea.KeyMsg:
