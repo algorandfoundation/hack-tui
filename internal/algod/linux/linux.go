@@ -6,9 +6,9 @@ import (
 	"github.com/algorandfoundation/algorun-tui/internal/algod/fallback"
 	"github.com/algorandfoundation/algorun-tui/internal/system"
 	"github.com/charmbracelet/log"
-
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"text/template"
 )
@@ -28,12 +28,12 @@ func Install() error {
 	if system.CmdExists("apt-get") { // On some Debian systems we use apt-get
 		log.Info("Installing with apt-get")
 		return system.RunAll(system.CmdsList{
-			{"apt-get", "update"},
-			{"apt-get", "install", "-y", "gnupg2", "curl", "software-properties-common"},
-			{"sh", "-c", "curl -o - https://releases.algorand.com/key.pub | tee /etc/apt/trusted.gpg.d/algorand.asc"},
-			{"sh", "-c", `add-apt-repository -y "deb [arch=amd64] https://releases.algorand.com/deb/ stable main"`},
-			{"apt-get", "update"},
-			{"apt-get", "install", "-y", "algorand-devtools"},
+			{"sudo", "apt-get", "update"},
+			{"sudo", "apt-get", "install", "-y", "gnupg2", "curl", "software-properties-common"},
+			{"sh", "-c", "curl -o - https://releases.algorand.com/key.pub | sudo tee /etc/apt/trusted.gpg.d/algorand.asc"},
+			{"sudo", "add-apt-repository", "-y", fmt.Sprintf("deb [arch=%s] https://releases.algorand.com/deb/ stable main", runtime.GOARCH)},
+			{"sudo", "apt-get", "update"},
+			{"sudo", "apt-get", "install", "-y", "algorand-devtools"},
 		})
 	}
 
@@ -65,14 +65,14 @@ func Uninstall() error {
 	if system.CmdExists("apt-get") {
 		log.Info("Using apt-get package manager")
 		unInstallCmds = [][]string{
-			{"apt-get", "autoremove", "algorand-devtools", "algorand", "-y"},
+			{"sudo", "apt-get", "autoremove", "algorand-devtools", "algorand", "-y"},
 		}
 	}
 	// On Fedora and CentOs8 there's the dnf package manager
 	if system.CmdExists("dnf") {
 		log.Info("Using dnf package manager")
 		unInstallCmds = [][]string{
-			{"dnf", "remove", "algorand-devtools", "algorand", "-y"},
+			{"sudo", "dnf", "remove", "algorand-devtools", "algorand", "-y"},
 		}
 	}
 	// Error on unsupported package managers
@@ -81,8 +81,8 @@ func Uninstall() error {
 	}
 
 	// Commands to clear systemd algorand.service and any other files, like the configuration override
-	unInstallCmds = append(unInstallCmds, []string{"bash", "-c", "rm -rf /etc/systemd/system/algorand*"})
-	unInstallCmds = append(unInstallCmds, []string{"systemctl", "daemon-reload"})
+	unInstallCmds = append(unInstallCmds, []string{"sudo", "bash", "-c", "rm -rf /etc/systemd/system/algorand*"})
+	unInstallCmds = append(unInstallCmds, []string{"sudo", "systemctl", "daemon-reload"})
 
 	return system.RunAll(unInstallCmds)
 }
@@ -92,13 +92,13 @@ func Uninstall() error {
 func Upgrade() error {
 	if system.CmdExists("apt-get") {
 		return system.RunAll(system.CmdsList{
-			{"apt-get", "update"},
-			{"apt-get", "install", "--only-upgrade", "-y", "algorand-devtools", "algorand"},
+			{"sudo", "apt-get", "update"},
+			{"sudo", "apt-get", "install", "--only-upgrade", "-y", "algorand-devtools", "algorand"},
 		})
 	}
 	if system.CmdExists("dnf") {
 		return system.RunAll(system.CmdsList{
-			{"dnf", "update", "-y", "--refresh", "algorand-devtools", "algorand"},
+			{"sudo", "dnf", "update", "-y", "--refresh", "algorand-devtools", "algorand"},
 		})
 	}
 	return fmt.Errorf("the *node upgrade* command is currently only available for installations done with an approved package manager. Please use a different method to upgrade")
@@ -109,21 +109,21 @@ func Upgrade() error {
 // Returns an error if the command fails.
 // TODO: Replace with D-Bus integration
 func Start() error {
-	return exec.Command("systemctl", "start", "algorand").Run()
+	return exec.Command("sudo", "systemctl", "start", "algorand").Run()
 }
 
 // Stop shuts down the Algorand algod system process on Linux using the systemctl stop command.
 // Returns an error if the operation fails.
 // TODO: Replace with D-Bus integration
 func Stop() error {
-	return exec.Command("systemctl", "stop", "algorand").Run()
+	return exec.Command("sudo", "systemctl", "stop", "algorand").Run()
 }
 
 // IsService checks if the "algorand.service" is listed as a systemd unit file on Linux.
 // Returns true if it exists.
 // TODO: Replace with D-Bus integration
 func IsService() bool {
-	out, err := system.Run([]string{"systemctl", "list-unit-files", "algorand.service"})
+	out, err := system.Run([]string{"sudo", "systemctl", "list-unit-files", "algorand.service"})
 	if err != nil {
 		return false
 	}

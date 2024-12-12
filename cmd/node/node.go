@@ -1,13 +1,10 @@
 package node
 
 import (
-	"errors"
 	"github.com/algorandfoundation/algorun-tui/internal/algod"
 	"github.com/algorandfoundation/algorun-tui/ui/style"
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"os"
-	"runtime"
 )
 
 const SudoWarningMsg = "(You may be prompted for your password)"
@@ -26,9 +23,9 @@ var Cmd = &cobra.Command{
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
 		// Check that we are calling with sudo on linux
-		if os.Geteuid() != 0 && runtime.GOOS == "linux" {
-			return errors.New(PermissionErrorMsg)
-		}
+		//if os.Geteuid() != 0 && runtime.GOOS == "linux" {
+		//	return errors.New(PermissionErrorMsg)
+		//}
 		return nil
 	},
 }
