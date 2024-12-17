@@ -1,4 +1,4 @@
-package internal
+package participation
 
 import (
 	"context"
@@ -53,7 +53,7 @@ func Test_ListParticipationKeys(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = GetPartKeys(ctx, client)
+	_, _, err = GetList(ctx, client)
 
 	// Expect unauthorized for Urtho servers
 	if err == nil {
@@ -63,7 +63,7 @@ func Test_ListParticipationKeys(t *testing.T) {
 	// Setup elevated client
 	tClient := test.GetClient(false)
 
-	keys, err := GetPartKeys(ctx, tClient)
+	keys, _, err := GetList(ctx, tClient)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func Test_ReadParticipationKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = ReadPartKey(ctx, client, "unknown")
+	_, _, err = GetKey(ctx, client, "unknown")
 
 	// Expect unauthorized for Urtho servers
 	if err == nil {
@@ -87,7 +87,7 @@ func Test_ReadParticipationKey(t *testing.T) {
 
 	tClient := test.GetClient(false)
 
-	keys, err := GetPartKeys(ctx, tClient)
+	keys, _, err := GetList(ctx, tClient)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func Test_ReadParticipationKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = ReadPartKey(ctx, tClient, (*keys)[0].Id)
+	_, _, err = GetKey(ctx, tClient, (keys)[0].Id)
 
 	if err != nil {
 		t.Fatal(err)
@@ -112,7 +112,7 @@ func Test_GenerateParticipationKey(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Generate error
-	_, err = GenerateKeyPair(ctx, client, "", nil)
+	_, err = GenerateKeys(ctx, client, "", nil)
 	if err == nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func Test_GenerateParticipationKey(t *testing.T) {
 	}
 
 	// This returns nothing and sucks
-	key, err := GenerateKeyPair(ctx, tClient, "ABC", &params)
+	key, err := GenerateKeys(ctx, tClient, "ABC", &params)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,12 +143,12 @@ func Test_DeleteParticipationKey(t *testing.T) {
 		First:    0,
 		Last:     30000,
 	}
-	key, err := GenerateKeyPair(ctx, client, "ABC", &params)
+	key, err := GenerateKeys(ctx, client, "ABC", &params)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = DeletePartKey(ctx, client, key.Id)
+	err = Delete(ctx, client, key.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,12 +156,12 @@ func Test_DeleteParticipationKey(t *testing.T) {
 func Test_RemovePartKeyByID(t *testing.T) {
 	// Test case: Remove an existing key
 	t.Run("Remove existing key", func(t *testing.T) {
-		keys := []api.ParticipationKey{
+		keys := List{
 			{Id: "key1"},
 			{Id: "key2"},
 			{Id: "key3"},
 		}
-		expectedKeys := []api.ParticipationKey{
+		expectedKeys := List{
 			{Id: "key1"},
 			{Id: "key3"},
 		}
@@ -178,12 +178,12 @@ func Test_RemovePartKeyByID(t *testing.T) {
 
 	// Test case: Remove a non-existing key
 	t.Run("Remove non-existing key", func(t *testing.T) {
-		keys := []api.ParticipationKey{
+		keys := List{
 			{Id: "key1"},
 			{Id: "key2"},
 			{Id: "key3"},
 		}
-		expectedKeys := []api.ParticipationKey{
+		expectedKeys := List{
 			{Id: "key1"},
 			{Id: "key2"},
 			{Id: "key3"},
@@ -201,7 +201,7 @@ func Test_RemovePartKeyByID(t *testing.T) {
 
 	// Test case: Remove a key from an empty list
 	t.Run("Remove key from empty list", func(t *testing.T) {
-		keys := []api.ParticipationKey{}
+		keys := List{}
 		RemovePartKeyByID(&keys, "key1")
 		if len(keys) != 0 {
 			t.Fatalf("expected 0 keys, got %d", len(keys))
